@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Properties - Hotel & Villa Booking</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">🏨 Hotel Booking</div>
+      <ul class="nav-menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/properties.html">Properties</a></li>
+        <li id="authNav">
+          <a href="/login.html">Login</a> | 
+          <a href="/register.html">Register</a>
+        </li>
+        <li id="userNav" style="display:none;">
+          <a href="/my-bookings.html">My Bookings</a> | 
+          <a href="#" onclick="logout()">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <section class="properties-section">
+      <h1>Available Properties</h1>
+      
+      <div class="search-filters">
+        <input type="text" id="cityFilter" placeholder="Search by city...">
+        <select id="typeFilter">
+          <option value="">All Types</option>
+          <option value="Hotel">Hotel</option>
+          <option value="Villa">Villa</option>
+          <option value="Resort">Resort</option>
+        </select>
+        <input type="number" id="minPrice" placeholder="Min Price" min="0">
+        <input type="number" id="maxPrice" placeholder="Max Price" min="0">
+        <button class="btn btn-primary" onclick="filterProperties()">Search</button>
+      </div>
+
+      <div id="propertiesContainer" class="properties-grid">
+        <!-- Properties will be loaded here -->
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Hotel & Villa Booking. All rights reserved.</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    async function loadProperties(filters = {}) {
+      try {
+        let url = '/api/properties?';
+        if (filters.city) url += `city=${filters.city}&`;
+        if (filters.type) url += `type=${filters.type}&`;
+        if (filters.minPrice) url += `minPrice=${filters.minPrice}&`;
+        if (filters.maxPrice) url += `maxPrice=${filters.maxPrice}&`;
+
+        const response = await fetch(url);
+        const properties = await response.json();
+
+        const container = document.getElementById('propertiesContainer');
+        container.innerHTML = '';
+
+        properties.forEach(prop => {
+          const card = document.createElement('div');
+          card.className = 'property-card';
+          card.innerHTML = `
+            <img src="${prop.image_url}" alt="${prop.name}">
+            <div class="property-info">
+              <h3>${prop.name}</h3>
+              <p class="property-type">${prop.type}</p>
+              <p class="property-location">📍 ${prop.location}, ${prop.city}</p>
+              <p class="property-description">${prop.description}</p>
+              <div class="property-details">
+                <span>👥 ${prop.max_guests} Guests</span>
+                <span>🛏️ ${prop.bedrooms} Bedrooms</span>
+                <span>🚿 ${prop.bathrooms} Bathrooms</span>
+              </div>
+              <p class="property-amenities"><strong>Amenities:</strong> ${prop.amenities}</p>
+              <div class="property-footer">
+                <div class="price">$${prop.price_per_night}/night</div>
+                <button class="btn btn-primary" onclick="goToProperty(${prop.id})">View & Book</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading properties:', error);
+      }
+    }
+
+    function filterProperties() {
+      const filters = {
+        city: document.getElementById('cityFilter').value,
+        type: document.getElementById('typeFilter').value,
+        minPrice: document.getElementById('minPrice').value,
+        maxPrice: document.getElementById('maxPrice').value
+      };
+      loadProperties(filters);
+    }
+
+    function goToProperty(id) {
+      window.location.href = `/property-detail.html?id=${id}`;
+    }
+
+    loadProperties();
+  </script>
+</body>
+</html>

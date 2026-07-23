@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings - Hotel & Villa Booking</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">🏨 Hotel Booking</div>
+      <ul class="nav-menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/properties.html">Properties</a></li>
+        <li id="userNav">
+          <a href="/my-bookings.html">My Bookings</a> | 
+          <a href="#" onclick="logout()">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <section class="bookings-section">
+      <h1>My Bookings</h1>
+      <div id="bookingsContainer" class="bookings-list">
+        <!-- Bookings will be loaded here -->
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Hotel & Villa Booking. All rights reserved.</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    async function loadBookings() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/bookings', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const bookings = await response.json();
+        const container = document.getElementById('bookingsContainer');
+
+        if (bookings.length === 0) {
+          container.innerHTML = '<p>No bookings yet. <a href="/properties.html">Start booking now!</a></p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        bookings.forEach(booking => {
+          const card = document.createElement('div');
+          card.className = 'booking-card';
+          card.innerHTML = `
+            <img src="${booking.image_url}" alt="${booking.name}">
+            <div class="booking-info">
+              <h3>${booking.name}</h3>
+              <p class="booking-location">📍 ${booking.location}</p>
+              <p><strong>Check-in:</strong> ${booking.check_in}</p>
+              <p><strong>Check-out:</strong> ${booking.check_out}</p>
+              <p><strong>Guests:</strong> ${booking.guests}</p>
+              <p><strong>Total Price:</strong> $${booking.total_price}</p>
+              <p><strong>Status:</strong> <span class="status-${booking.status}">${booking.status.toUpperCase()}</span></p>
+              <div class="booking-actions">
+                <button class="btn btn-secondary" onclick="editBooking(${booking.id})">Edit</button>
+                <button class="btn btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+      }
+    }
+
+    function editBooking(id) {
+      alert('Edit functionality coming soon!');
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`/api/bookings/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          alert('Booking cancelled successfully');
+          loadBookings();
+        } else {
+          alert('Failed to cancel booking');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    loadBookings();
+  </script>
+</body>
+</html>
